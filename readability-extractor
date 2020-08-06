@@ -19,7 +19,5 @@ function parse(dirty){
   return article;
 }
 
-const source_path = process.argv[2];
-const fs = require("fs");
-const data = fs.readFileSync(source_path).toString();
-console.log(parse(data));
+const source_data = process.argv[2];
+console.log(parse(source_data));
