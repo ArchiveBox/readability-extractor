@@ -1,0 +1,25 @@
+#!/usr/bin/env node
+
+function parse(dirty){
+  const createDOMPurify = require('dompurify');
+  const { Readability } = require('@mozilla/readability');
+  const { JSDOM } = require('jsdom');
+  
+  const window = new JSDOM("").window;
+  const DOMPurify = createDOMPurify(window);
+  
+  const clean = DOMPurify.sanitize(dirty);
+  
+  const doc = new JSDOM(clean, {
+    url: "https://www.example.com/the-page-i-got-the-source-from"
+  });
+  
+  const reader = new Readability(doc.window.document);
+  const article = reader.parse();
+  return article;
+}
+
+const source_path = process.argv[2];
+const fs = require("fs");
+const data = fs.readFileSync(source_path).toString();
+console.log(parse(data));
