@@ -20,4 +20,9 @@ function parse(dirty){
 }
 
 const source_data = process.argv[2];
-console.log(parse(source_data));
+if(source_data == "--version"){
+  console.log("0.1.0")
+}
+else{
+  console.log(parse(source_data));
+}
