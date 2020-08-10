@@ -19,10 +19,12 @@ function parse(dirty){
   return article;
 }
 
-const source_data = process.argv[2];
-if(source_data == "--version"){
+const source_path = process.argv[2];
+if(source_path == "--version"){
   console.log("0.1.0")
 }
 else{
-  console.log(JSON.stringify(parse(source_data)));
+  const fs = require("fs");
+  const data = fs.readFileSync(source_path).toString();
+  console.log(JSON.stringify(parse(data)));
 }
