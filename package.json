@@ -4,6 +4,9 @@
 	"description": "Readability wrapper to avoid having nodejs as a requirement for archivebox",
 	"author": "Cristian Vargas",
 	"license": "MIT",
+	"bin": {
+		"readability-extractor": "./readability-extractor"
+	},
 	"dependencies": {
 		"@mozilla/readability": "",
 		"jsdom": "",
