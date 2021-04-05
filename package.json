@@ -10,6 +10,6 @@
 	"dependencies": {
 		"@mozilla/readability": "^0.4.1",
 		"jsdom": "^16.5.2",
-		"dompurify": "^2.2.7"
+		"dompurify": "^2.0.17"
 	}
 }
