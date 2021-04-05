@@ -1,30 +1,30 @@
 #!/usr/bin/env node
 
-function parse(dirty){
+const source_path = process.argv[2]
+
+if (process.argv.includes("--version")) {
+  const package_info = require('./package.json');
+  console.log(package_info.version)
+  process.exit(0)
+}
+
+function getArticle(html) {
   const createDOMPurify = require('dompurify');
   const { Readability } = require('@mozilla/readability');
   const { JSDOM } = require('jsdom');
   
-  const window = new JSDOM("").window;
-  const DOMPurify = createDOMPurify(window);
+  const window = new JSDOM("").window
+  const DOMPurify = createDOMPurify(window)
+  const clean = DOMPurify.sanitize(html)
   
-  const clean = DOMPurify.sanitize(dirty);
+  const doc = new JSDOM(clean, {url: "https://example.com/unused-placeholder-url"})
   
-  const doc = new JSDOM(clean, {
-    url: "https://www.example.com/the-page-i-got-the-source-from"
-  });
-  
-  const reader = new Readability(doc.window.document);
-  const article = reader.parse();
-  return article;
+  const reader = new Readability(doc.window.document)
+  return reader.parse()
 }
 
-const source_path = process.argv[2];
-if(source_path == "--version"){
-  console.log("0.1.0")
-}
-else{
-  const fs = require("fs");
-  const data = fs.readFileSync(source_path).toString();
-  console.log(JSON.stringify(parse(data)));
-}
+const fs = require("fs");
+
+const html = fs.readFileSync(source_path).toString()
+console.log(JSON.stringify(getArticle(html)))
+
