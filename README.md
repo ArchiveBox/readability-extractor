@@ -43,5 +43,5 @@ archivebox config --set SAVE_READABILITY=True
 archivebox config --set READABILITY_BINARY="$(which readability-extractor)"
 
 # test archiving oneshot using only singlefile+readability
-archivebox oneshot --extract=singlefile,readability 'https://exmaple.com'
+archivebox add --extract=singlefile,readability 'https://exmaple.com'
 ```
