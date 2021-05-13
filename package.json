@@ -1,15 +1,17 @@
 {
 	"name": "readability-extractor",
-	"version": "0.0.2",
-	"description": "Readability wrapper to avoid having nodejs as a requirement for archivebox",
-	"author": "Cristian Vargas",
+	"version": "0.0.3",
+	"description": "Javascript wrapper around Mozilla Readability for ArchiveBox to call as a oneshot CLI to extract article text",
+	"author": "Nick Sweeting <git@sweeting.me>",
 	"license": "MIT",
+        "homepage": "https://github.com/ArchiveBox/readability-extractor",
+        "repository": "github:ArchiveBox/readability-extractor",
 	"bin": {
 		"readability-extractor": "./readability-extractor"
 	},
 	"dependencies": {
 		"@mozilla/readability": "^0.4.1",
-		"jsdom": "^16.5.2",
-		"dompurify": "^2.0.17"
+		"jsdom": "^16.5.3",
+		"dompurify": "^2.2.8"
 	}
 }
