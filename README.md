@@ -31,7 +31,8 @@ readability-extractor some_article.html 'https://exmaple.com/original/url/some/a
 ```
 
 ## ArchiveBox Integration
-``` 
+
+```bash
 # You don't have to run these commands usually.
 # Readability is on by default and ArchiveBox will find any 
 # installed version in your $PATH automatically
@@ -40,4 +41,7 @@ readability-extractor some_article.html 'https://exmaple.com/original/url/some/a
 # and/or specify a manual path to the binary, you can do this:
 archivebox config --set SAVE_READABILITY=True
 archivebox config --set READABILITY_BINARY="$(which readability-extractor)"
+
+# test archiving oneshot using only singlefile+readability
+archivebox oneshot --extract=singlefile,readability 'https://exmaple.com'
 ```
