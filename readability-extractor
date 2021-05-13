@@ -1,30 +1,38 @@
 #!/usr/bin/env node
+/*
+readability-extractor
+MIT License
+https://github.com/ArchiveBox/readability-extractor
 
-const source_path = process.argv[2]
+Usage:
+  ./readability-extractor ./archive/12345678910/singlefile.html > article.json
+*/
+
+const source_path = process.argv[2]                                                            // e.g. ./archive/12345678910/singlefile.html
+const original_url = process.argv[3] || "https://example.com/unused-placeholder-url"           // e.g. https://exmaple.com/some/page.html
 
 if (process.argv.includes("--version")) {
-  const package_info = require('./package.json');
-  console.log(package_info.version)
+  const package_info = require('./package.json')
+  console.log(package_info.version)   // e.g. 1.0.0
   process.exit(0)
 }
 
 function getArticle(html) {
-  const createDOMPurify = require('dompurify');
-  const { Readability } = require('@mozilla/readability');
-  const { JSDOM } = require('jsdom');
+  const createDOMPurify = require('dompurify')
+  const { Readability } = require('@mozilla/readability')
+  const { JSDOM } = require('jsdom')
   
   const window = new JSDOM("").window
   const DOMPurify = createDOMPurify(window)
   const clean = DOMPurify.sanitize(html)
   
-  const doc = new JSDOM(clean, {url: "https://example.com/unused-placeholder-url"})
+  const doc = new JSDOM(clean, {url: original_url})
   
   const reader = new Readability(doc.window.document)
   return reader.parse()
 }
 
-const fs = require("fs");
+const fs = require("fs")
 
 const html = fs.readFileSync(source_path).toString()
 console.log(JSON.stringify(getArticle(html)))
-
