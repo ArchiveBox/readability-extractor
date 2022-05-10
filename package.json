@@ -1,17 +1,17 @@
 {
 	"name": "readability-extractor",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"description": "Javascript wrapper around Mozilla Readability for ArchiveBox to call as a oneshot CLI to extract article text",
 	"author": "Nick Sweeting <git@sweeting.me>",
 	"license": "MIT",
-        "homepage": "https://github.com/ArchiveBox/readability-extractor",
-        "repository": "github:ArchiveBox/readability-extractor",
+	"homepage": "https://github.com/ArchiveBox/readability-extractor",
+	"repository": "github:ArchiveBox/readability-extractor",
 	"bin": {
 		"readability-extractor": "./readability-extractor"
 	},
 	"dependencies": {
-		"@mozilla/readability": "^0.4.1",
-		"jsdom": "^16.5.3",
-		"dompurify": "^2.2.8"
+		"@mozilla/readability": "^0.4.2",
+		"jsdom": "^19.0.0",
+		"dompurify": "^2.3.6"
 	}
 }
