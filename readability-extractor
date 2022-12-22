@@ -40,7 +40,10 @@ JSDOM.fromFile(source_path).then(dom => {
   charset = dom.window.document.characterSet
   
   const article = getArticle(dom)
-  article['content'] = `<meta charset="${charset}">\n` + article['content']
+  //Readability parsing can fail and it will just return null
+  if (article !== null)
+    if (article['content'] !== null)
+      article['content'] = `<meta charset="${charset}">\n` + article['content']
   console.log(JSON.stringify(article))
 });
 
