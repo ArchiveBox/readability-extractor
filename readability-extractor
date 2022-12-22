@@ -17,22 +17,30 @@ if (process.argv.includes("--version")) {
   process.exit(0)
 }
 
-function getArticle(html) {
+function getArticle(dom) {
   const createDOMPurify = require('dompurify')
   const { Readability } = require('@mozilla/readability')
-  const { JSDOM } = require('jsdom')
-  
-  const window = new JSDOM("").window
+
+  const window = dom.window
+  const html = dom.serialize()
   const DOMPurify = createDOMPurify(window)
   const clean = DOMPurify.sanitize(html)
-  
   const doc = new JSDOM(clean, {url: original_url})
   
   const reader = new Readability(doc.window.document)
   return reader.parse()
 }
 
-const fs = require("fs")
+const { JSDOM } = require('jsdom')
 
-const html = fs.readFileSync(source_path).toString()
-console.log(JSON.stringify(getArticle(html)))
+//Determine the charset 
+//JSDOM uses the jsdom/html-encoding-sniffer library which implements the HTML standard sniffing algorithm.
+//JSDOM.fromFile is more robust at detecting the charset than from a string: https://github.com/jsdom/jsdom#encoding-sniffing
+JSDOM.fromFile(source_path).then(dom => {
+	charset = dom.window.document.characterSet
+
+	const article = getArticle(dom)
+	article['content'] = `<meta charset="${charset}">\n` + article['content']
+	console.log(JSON.stringify(article))
+});
+
