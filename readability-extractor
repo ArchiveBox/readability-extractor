@@ -32,18 +32,22 @@ function getArticle(dom) {
 }
 
 const { JSDOM } = require('jsdom')
+const { htmlEncodingSniffer } = require('html-encoding-sniffer')
 
 //Determine the charset 
 //JSDOM uses the jsdom/html-encoding-sniffer library which implements the HTML standard sniffing algorithm.
 //JSDOM.fromFile is more robust at detecting the charset than from a string: https://github.com/jsdom/jsdom#encoding-sniffing
 JSDOM.fromFile(source_path).then(dom => {
   charset = dom.window.document.characterSet
-  
+
   const article = getArticle(dom)
   //Readability parsing can fail and it will just return null
-  if (article !== null)
-    if (article['content'] !== null)
+  if (article !== null) {
+    if (article['content'] !== null && charset !== 'windows-1252') {
       article['content'] = `<meta charset="${charset}">\n` + article['content']
+     }
+  }
   console.log(JSON.stringify(article))
 });
+
 
