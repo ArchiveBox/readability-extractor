@@ -37,10 +37,10 @@ const { JSDOM } = require('jsdom')
 //JSDOM uses the jsdom/html-encoding-sniffer library which implements the HTML standard sniffing algorithm.
 //JSDOM.fromFile is more robust at detecting the charset than from a string: https://github.com/jsdom/jsdom#encoding-sniffing
 JSDOM.fromFile(source_path).then(dom => {
-	charset = dom.window.document.characterSet
-
-	const article = getArticle(dom)
-	article['content'] = `<meta charset="${charset}">\n` + article['content']
-	console.log(JSON.stringify(article))
+  charset = dom.window.document.characterSet
+  
+  const article = getArticle(dom)
+  article['content'] = `<meta charset="${charset}">\n` + article['content']
+  console.log(JSON.stringify(article))
 });
 
