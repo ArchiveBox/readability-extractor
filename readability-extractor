@@ -32,7 +32,6 @@ function getArticle(dom) {
 }
 
 const { JSDOM } = require('jsdom')
-const { htmlEncodingSniffer } = require('html-encoding-sniffer')
 
 //Determine the charset 
 //JSDOM uses the jsdom/html-encoding-sniffer library which implements the HTML standard sniffing algorithm.
@@ -49,5 +48,3 @@ JSDOM.fromFile(source_path).then(dom => {
   }
   console.log(JSON.stringify(article))
 });
-
-
