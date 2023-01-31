@@ -9,7 +9,7 @@ Usage:
 */
 
 const source_path = process.argv[2]                                                            // e.g. ./archive/12345678910/singlefile.html
-const original_url = process.argv[3] || "https://example.com/unused-placeholder-url"           // e.g. https://exmaple.com/some/page.html
+const original_url = process.argv[3] || "https://example.com/url-was-not-specified"            // e.g. https://exmaple.com/some/page.html
 
 if (process.argv.includes("--version")) {
   const package_info = require('./package.json')
@@ -23,28 +23,32 @@ function getArticle(dom) {
 
   const window = dom.window
   const html = dom.serialize()
+
+  // strip potential XSS/JS in the article using DOMPurify library
   const DOMPurify = createDOMPurify(window)
-  const clean = DOMPurify.sanitize(html)
-  const doc = new JSDOM(clean, {url: original_url})
+  const cleaned_html = DOMPurify.sanitize(html)
+  const cleaned_dom = new JSDOM(cleaned_html, {url: original_url})
   
-  const reader = new Readability(doc.window.document)
-  return reader.parse()
+  // parse out the Article body text using Readability library
+  const reader = new Readability(cleaned_dom.window.document)
+  const article = reader.parse()
+
+  // Attach information about original source charset to output
+  const charset = dom.window.document.characterSet || cleaned_dom.window.document.characterSet
+  article['charset'] = charset
+  
+  if (article['content'] !== null) {
+      // prepend meta charset tag to html to hint to downstream renderers to use the correct original encoding
+      article['content'] = `<meta charset="${original_charset}">\n${article['content']}`
+  }
+  return article
 }
 
 const { JSDOM } = require('jsdom')
+// JSDOM uses the jsdom/html-encoding-sniffer library which implements the HTML standard sniffing algorithm.
+// JSDOM.fromFile is more robust at detecting the charset than from a string: https://github.com/jsdom/jsdom#encoding-sniffing
 
-//Determine the charset 
-//JSDOM uses the jsdom/html-encoding-sniffer library which implements the HTML standard sniffing algorithm.
-//JSDOM.fromFile is more robust at detecting the charset than from a string: https://github.com/jsdom/jsdom#encoding-sniffing
 JSDOM.fromFile(source_path).then(dom => {
-  charset = dom.window.document.characterSet
-
   const article = getArticle(dom)
-  //Readability parsing can fail and it will just return null
-  if (article !== null) {
-    if (article['content'] !== null && charset !== 'windows-1252') {
-      article['content'] = `<meta charset="${charset}">\n` + article['content']
-     }
-  }
   console.log(JSON.stringify(article))
 });
