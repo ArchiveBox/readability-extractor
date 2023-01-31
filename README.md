@@ -16,17 +16,20 @@ chmod +x /usr/local/bin/readability-extractor
 
 ## Usage
 ```bash
-readability-extractor some_article.html 'https://exmaple.com/original/url/some/article.html' > some_article.json
+# readability-extractor <input HTML path> <original url?> <suggested encoding?> > <output JSON path>
+readability-extractor some_article.html 'https://exmaple.com/original/url/some/article.html' 'UTF-8' > some_article.json
 ```
 ```json
 {
-    "title":"Title autodetected from article html",
+    "title": "Title autodetected from article html",
     "byline": "Autodetected author...",
     "excerpt": "Autodetected short description",
     "dir": "ltr",
     "length": 1337,
+    "lang": null,
+    "charset": "UTF-8",
     "content": "<div id=\"readability-page-1\" class=\"page\">abc some article body text...</div>",
-    "textContent": "abc some article body text...",
+    "textContent": "abc some article body text..."
 }
 ```
 

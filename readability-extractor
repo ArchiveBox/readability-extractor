@@ -5,16 +5,18 @@ MIT License
 https://github.com/ArchiveBox/readability-extractor
 
 Usage:
-  ./readability-extractor ./archive/12345678910/singlefile.html > article.json
+  ./readability-extractor ./archive/12345678910/singlefile.html 'https://example.com/original/url.html' 'utf-8' > article.json
 */
 
 const source_path = process.argv[2]                                                            // e.g. ./archive/12345678910/singlefile.html
-const original_url = process.argv[3] || "https://example.com/url-was-not-specified"            // e.g. https://exmaple.com/some/page.html
+const original_url = process.argv[3] || "https://example.com/url-not-specified"                // e.g. https://exmaple.com/some/page.html
+const encoding_hint = process.argv[4] || null                                                  // e.g. utf-8 or windows-1252
 
+// don't importing anything before this point to avoid erroring for missing dependencies during version query
 if (process.argv.includes("--version")) {
-  const package_info = require('./package.json')
-  console.log(package_info.version)   // e.g. 1.0.0
-  process.exit(0)
+    const package_info = require('./package.json')
+    console.log(package_info.version)   // e.g. 1.0.0
+    process.exit(0)
 }
 
 function getArticle(dom) {
@@ -33,13 +35,18 @@ function getArticle(dom) {
   const reader = new Readability(cleaned_dom.window.document)
   const article = reader.parse()
 
+  // Strip leading and trailing whitespace
+  if (article['textContent'] !== null) {
+      article['textContent'] = article['textContent'].trim()
+  }
+
   // Attach information about original source charset to output
   const charset = dom.window.document.characterSet || cleaned_dom.window.document.characterSet
   article['charset'] = charset
   
-  if (article['content'] !== null) {
+  if (article['content'] !== null && charset !== 'windows-1252') {
       // prepend meta charset tag to html to hint to downstream renderers to use the correct original encoding
-      article['content'] = `<meta charset="${original_charset}">\n${article['content']}`
+      article['content'] = `<meta charset="${charset}">\n${article['content']}`
   }
   return article
 }
@@ -48,7 +55,8 @@ const { JSDOM } = require('jsdom')
 // JSDOM uses the jsdom/html-encoding-sniffer library which implements the HTML standard sniffing algorithm.
 // JSDOM.fromFile is more robust at detecting the charset than from a string: https://github.com/jsdom/jsdom#encoding-sniffing
 
-JSDOM.fromFile(source_path).then(dom => {
-  const article = getArticle(dom)
-  console.log(JSON.stringify(article))
+
+JSDOM.fromFile(source_path, encoding_hint && {contentType: `text/html; charset=${encoding_hint}`}).then(dom => {
+    const article = getArticle(dom)
+    console.log(JSON.stringify(article, null, 4))
 });
