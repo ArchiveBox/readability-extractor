@@ -35,6 +35,11 @@ function getArticle(dom) {
   const reader = new Readability(cleaned_dom.window.document)
   const article = reader.parse()
 
+  // check for parse failure
+  if (!article) {
+    throw 'Readability was unable to parse article text from this HTML'
+  }
+
   // Strip leading and trailing whitespace
   if (article['textContent'] !== null) {
       article['textContent'] = article['textContent'].trim()
