@@ -19,12 +19,12 @@ if (process.argv.includes("--version")) {
     process.exit(0)
 }
 
-function getArticle(dom) {
+function getArticle(html) {
   const createDOMPurify = require('dompurify')
   const { Readability } = require('@mozilla/readability')
+  const { JSDOM } = require('jsdom')
 
-  const window = dom.window
-  const html = dom.serialize()
+  const window = new JSDOM('').window
 
   // strip potential XSS/JS in the article using DOMPurify library
   const DOMPurify = createDOMPurify(window)
@@ -46,7 +46,7 @@ function getArticle(dom) {
   }
 
   // Attach information about original source charset to output
-  const charset = dom.window.document.characterSet || cleaned_dom.window.document.characterSet
+  const charset = cleaned_dom.window.document.characterSet
   article['charset'] = charset
   
   if (article['content'] !== null && charset !== 'windows-1252') {
@@ -56,12 +56,24 @@ function getArticle(dom) {
   return article
 }
 
-const { JSDOM } = require('jsdom')
-// JSDOM uses the jsdom/html-encoding-sniffer library which implements the HTML standard sniffing algorithm.
-// JSDOM.fromFile is more robust at detecting the charset than from a string: https://github.com/jsdom/jsdom#encoding-sniffing
+const fs = require('fs')
 
+fs.readFile(source_path, 'utf8', function(err, data) {
+    if (err) throw err;
 
-JSDOM.fromFile(source_path, encoding_hint && {contentType: `text/html; charset=${encoding_hint}`}).then(dom => {
-    const article = getArticle(dom)
+    let html = data
+
+    if (html.length > 14_000_000) {
+      console.warn(`[!] WARNING: Stripping url(data:image/...,base64,...) inline images as HTML sorce is too long (${html.length}) to process within 512mb RAM limit!`)
+
+      // Strip long url(data:image/...base64) strings created by singlefile as they cause JSDom to run out of memory if they are too big
+      const base64UrlRegex = /data:.+?\/.+?;base64,.+?(\)|")/gm;
+      const base64UrlReplacement = `data:image/png;base64,inline-images-stripped-by-archivebox-because-original-html-exceeded-size-limit==$1`;
+
+      html = html.replaceAll(base64UrlRegex, base64UrlReplacement)
+    }
+
+    article = getArticle(html)
+
     console.log(JSON.stringify(article, null, 4))
 });
