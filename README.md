@@ -2,7 +2,7 @@
 
 This is a tiny JS wrapper library around Mozilla's article-text extraction tool https://github.com/mozilla/readability.
 
-It's designed to be used as an [ArchiveBox](https://github.com/pirate/ArchiveBox) archive method.
+It's designed to be used as an [ArchiveBox](https://github.com/pirate/ArchiveBox) extractor.
 
 ## Install
 
