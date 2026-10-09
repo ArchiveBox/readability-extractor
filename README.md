@@ -48,3 +48,23 @@ archivebox config --set READABILITY_BINARY="$(which readability-extractor)"
 # test archiving oneshot using only singlefile+readability
 archivebox add --extract=singlefile,readability 'https://exmaple.com'
 ```
+
+## Development and releases
+
+Run `npm ci` and `npm test`. The regression tests invoke the real CLI against saved HTML.
+
+`.github/workflows/release.yml` tests pushes and pull requests. A `v<VERSION>` tag
+publishes the matching `package.json` version to npm using GitHub Actions OIDC.
+Before the first automated release, the npm package maintainer must configure a
+[trusted publisher](https://docs.npmjs.com/trusted-publishers/) in the
+[package settings](https://www.npmjs.com/package/readability-extractor/access):
+GitHub organization `ArchiveBox`, repository `readability-extractor`, workflow
+filename `release.yml`, no environment, with permission to publish. No npm token
+or GitHub Actions secret is required.
+
+To release, update the version with `npm version patch --no-git-tag-version`,
+commit and push the version files, wait for the main-branch checks to pass, then
+create and push the matching tag. Verify the version with
+`npm view readability-extractor version` before announcing publication.
+ArchiveBox's Readability plugin installs this npm package through its pnpm
+provider; a GitHub source push alone does not update that installed binary.
