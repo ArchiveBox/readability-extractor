@@ -30,6 +30,12 @@ function getArticle(html) {
   const DOMPurify = createDOMPurify(window)
   const cleaned_html = DOMPurify.sanitize(html)
   const cleaned_dom = new JSDOM(cleaned_html, {url: original_url})
+
+  // Readability turns BR chains into paragraphs, including inside PRE. Saved
+  // syntax-highlighted DOM uses those breaks for code lines and blank lines.
+  for (const br of cleaned_dom.window.document.querySelectorAll('pre br')) {
+    br.replaceWith(cleaned_dom.window.document.createTextNode('\n'))
+  }
   
   // parse out the Article body text using Readability library
   const reader = new Readability(cleaned_dom.window.document)
