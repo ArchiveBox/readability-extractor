@@ -33,6 +33,12 @@ readability-extractor some_article.html 'https://exmaple.com/original/url/some/a
 }
 ```
 
+Large inline `data:` URLs over 1 MiB are replaced before HTML parsing to bound
+parser memory. Ordinary smaller inline images and remote images are preserved.
+The existing safeguard for documents over 14,000,000 input bytes also removes their inline base64
+images. Use the original saved page when full embedded resources are required;
+article extraction retains the text and omits these oversized resources.
+
 ## ArchiveBox Integration
 
 ```bash

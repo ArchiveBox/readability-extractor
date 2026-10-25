@@ -64,20 +64,42 @@ function getArticle(html) {
 
 const fs = require('fs')
 
-fs.readFile(source_path, 'utf8', function(err, data) {
+fs.readFile(source_path, function(err, data) {
     if (err) throw err;
 
-    let html = data
+    // Strip byte-heavy payloads before UTF-8 decoding: one character outside Latin-1
+    // otherwise widens the entire base64-heavy document to a two-byte string.
+    let html = data.toString('latin1')
+    data = null
 
-    if (html.length > 14_000_000) {
-      console.warn(`[!] WARNING: Stripping url(data:image/...,base64,...) inline images as HTML sorce is too long (${html.length}) to process within 512mb RAM limit!`)
-
-      // Strip long url(data:image/...base64) strings created by singlefile as they cause JSDom to run out of memory if they are too big
-      const base64UrlRegex = /data:.+?\/.+?;base64,.+?(\)|")/gm;
-      const base64UrlReplacement = `data:image/png;base64,inline-images-stripped-by-archivebox-because-original-html-exceeded-size-limit==$1`;
-
-      html = html.replaceAll(base64UrlRegex, base64UrlReplacement)
+    // JSDOM allocates far more memory than an inline payload's source size.
+    // Apply the existing large-document safeguard before parsing, including
+    // individual oversized images in otherwise small documents. Keep ordinary
+    // inline images; the original capture remains the full-fidelity resource.
+    const stripAllInlineImages = html.length > 14_000_000
+    const maxInlineImageSize = 1024 * 1024
+    const replacement = 'data:image/png;base64,inline-images-stripped-by-archivebox-because-size-limit-exceeded=='
+    let strippedDataURLs = 0
+    const replaceDataURL = (url) => {
+      if ((stripAllInlineImages && /^data:[^,]*;base64,/i.test(url)) || url.length > maxInlineImageSize) {
+        strippedDataURLs++
+        return replacement
+      }
+      return url
     }
+
+    // Quoted values may contain wrapped base64. Handle those as a unit first;
+    // the unquoted form stops before whitespace, CSS parentheses, or attributes.
+    // Explicit delimiters avoid the old wildcard regex's unbounded backtracking
+    // when an unquoted URL has no later closing quote or parenthesis.
+    html = html.replace(/(["'])(data:[^,\s"'<>:]*;base64,[A-Za-z0-9+/=\t\r\n]+)\1|(?<![\w:-])(data:[^,\s"'<>:]*,[^\s"'<>)]+)/gi,
+      (match, quote, quoted, bare) => {
+        const url = quoted || bare
+        const replaced = replaceDataURL(url)
+        return replaced === url ? match : quoted ? quote + replaced + quote : replaced
+      })
+    html = Buffer.from(html, 'latin1').toString('utf8')
+    if (strippedDataURLs) console.warn(`[!] WARNING: Stripped ${strippedDataURLs} inline data URLs exceeding extraction size limits`)
 
     article = getArticle(html)
 
