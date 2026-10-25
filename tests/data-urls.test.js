@@ -33,14 +33,16 @@ function extract(body) {
 }
 
 test('the real CLI bounds a large inline image below the old total-HTML threshold', () => {
-  const doc = extract(`<img src="${largeImage}" alt="large"><img src="${smallImage}" alt="small"><img src="https://example.com/photo.png" alt="remote">`)
+  const doc = extract(`<img src="${largeImage}" alt="large"><img src="${smallImage}" srcset="https://example.com/one.png 1x, https://example.com/highres.png 2x" alt="small"><img src="${smallImage}" srcset="${largeImage} 1x, https://example.com/highres.png 2x" alt="mixed"><img src="https://example.com/photo.png" alt="remote">`)
   assert.equal(doc.querySelector('img[alt="small"]').getAttribute('src'), smallImage)
   assert.equal(doc.querySelector('img[alt="remote"]').getAttribute('src'), 'https://example.com/photo.png')
+  assert.ok(doc.querySelector('img[alt="small"]').getAttribute('srcset').endsWith(', https://example.com/highres.png 2x'))
+  assert.equal(doc.querySelector('img[alt="mixed"]').getAttribute('src'), smallImage)
   assert.ok(!doc.querySelector('img[alt="large"]').getAttribute('src').includes(largeImage))
 })
 
 test('quoted, unquoted, and line-wrapped data URLs preserve neighboring attributes and sanitization', () => {
-  const wrapped = largeImage.replace(/(.{4096})/g, '$1\n')
+  const wrapped = largeImage.replace(/(.{4096})/g, '$1\n  ')
   const doc = extract(`<img src=${largeImage} alt="unquoted" width="42"><img src='${wrapped}' alt="wrapped" width="43"><img src="${largeImage}" alt="quoted &quot; label" width="44" onerror="alert(1)"><a href="data:text/html;base64,${largeImage.split(',')[1]}">unsafe link</a><script>alert(1)</script>`)
   for (const width of ['42', '43', '44']) assert.ok(doc.querySelector(`img[width="${width}"]`), 'A URL must not consume neighboring attributes')
   assert.equal(doc.querySelector('img[width="44"]').getAttribute('alt'), 'quoted " label')
@@ -49,8 +51,10 @@ test('quoted, unquoted, and line-wrapped data URLs preserve neighboring attribut
 })
 
 test('percent-encoded data URLs are bounded without treating neighboring text as a URL', () => {
-  const encoded = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg"><metadata>' + 'x'.repeat(2 * 1024 * 1024) + '</metadata></svg>')
-  const doc = extract(`<img src="${encoded}" alt="encoded"><p>metadata: ordinary article text remains intact.</p><img src="${smallImage}" alt="small">`)
+  const encoded = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg"><metadata>(diagram\'s)' + 'x'.repeat(2 * 1024 * 1024) + '</metadata></svg>')
+  const singleQuoted = encoded.replaceAll("'", '%27').replaceAll('%22', '"')
+  const bare = encoded.replaceAll("'", '%27')
+  const doc = extract(`<img src="${encoded}" alt="encoded"><img src='${singleQuoted}' alt="single"><img src=${bare} alt=bare><p>metadata: ordinary article text remains intact.</p><img src="${smallImage}" alt="small">`)
   assert.ok(doc.body.textContent.includes('metadata: ordinary article text remains intact.'))
   assert.equal(doc.querySelector('img[alt="small"]').getAttribute('src'), smallImage)
 })

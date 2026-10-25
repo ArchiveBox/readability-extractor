@@ -88,15 +88,20 @@ fs.readFile(source_path, function(err, data) {
       return url
     }
 
-    // Quoted values may contain wrapped base64. Handle those as a unit first;
-    // the unquoted form stops before whitespace, CSS parentheses, or attributes.
-    // Explicit delimiters avoid the old wildcard regex's unbounded backtracking
-    // when an unquoted URL has no later closing quote or parenthesis.
-    html = html.replace(/(["'])(data:[^,\s"'<>:]*;base64,[A-Za-z0-9+/=\t\r\n]+)\1|(?<![\w:-])(data:[^,\s"'<>:]*,[^\s"'<>)]+)/gi,
-      (match, quote, quoted, bare) => {
-        const url = quoted || bare
+    // Wrapped base64 can contain whitespace, but generic quoted URLs cannot:
+    // a srcset value may contain more candidates that must not be discarded.
+    // Matching quotes allow opposite quotes and parentheses inside SVG URLs;
+    // only unquoted CSS url(...) values end at a parenthesis. Explicit
+    // delimiters avoid the old wildcard regex's unbounded backtracking.
+    const header = String.raw`data:[^,\s"'<>:]*,`
+    const base64 = String.raw`data:[^,\s"'<>:]*;base64,[A-Za-z0-9+/=\s]+`
+    const dataURLs = new RegExp(String.raw`"(${base64}|${header}[^"\s<>]+)"|'(${base64}|${header}[^'\s<>]+)'|\b(url\(\s*)(${header}[^\s"'<>)]*)|(?<![\w:-])(${header}[^\s"'<>]+)`, 'gi')
+    html = html.replace(dataURLs,
+      (match, doubleQuoted, singleQuoted, cssPrefix, cssURL, bare) => {
+        const url = doubleQuoted || singleQuoted || cssURL || bare
         const replaced = replaceDataURL(url)
-        return replaced === url ? match : quoted ? quote + replaced + quote : replaced
+        const quote = doubleQuoted ? '"' : singleQuoted ? "'" : ''
+        return replaced === url ? match : quote ? quote + replaced + quote : (cssPrefix || '') + replaced
       })
     html = Buffer.from(html, 'latin1').toString('utf8')
     if (strippedDataURLs) console.warn(`[!] WARNING: Stripped ${strippedDataURLs} inline data URLs exceeding extraction size limits`)
