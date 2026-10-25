@@ -28,7 +28,9 @@ function getArticle(html) {
 
   // strip potential XSS/JS in the article using DOMPurify library
   const DOMPurify = createDOMPurify(window)
-  const cleaned_html = DOMPurify.sanitize(html)
+  // Readability removes all style tags in _prepDocument. Remove them before
+  // jsdom parses unused CSS, which otherwise dumps unsupported styles to stderr.
+  const cleaned_html = DOMPurify.sanitize(html, { FORBID_TAGS: ['style'] })
   const cleaned_dom = new JSDOM(cleaned_html, {url: original_url})
 
   // Readability turns BR chains into paragraphs, including inside PRE. Saved
