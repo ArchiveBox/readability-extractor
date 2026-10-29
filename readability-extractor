@@ -33,6 +33,13 @@ function getArticle(html) {
   const cleaned_html = DOMPurify.sanitize(html, { FORBID_TAGS: ['style'] })
   const cleaned_dom = new JSDOM(cleaned_html, {url: original_url})
 
+  // Readability unconditionally removes asides in _prepArticle, but selecting
+  // an aside descendant first loses that ancestor and lets secondary content
+  // replace the article. Apply the same exclusion before candidate selection.
+  for (const aside of cleaned_dom.window.document.querySelectorAll('aside')) {
+    aside.remove()
+  }
+
   // Readability turns BR chains into paragraphs, including inside PRE. Saved
   // syntax-highlighted DOM uses those breaks for code lines and blank lines.
   for (const br of cleaned_dom.window.document.querySelectorAll('pre br')) {
